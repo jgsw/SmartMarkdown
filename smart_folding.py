@@ -110,20 +110,43 @@ class GlobalFoldingCommand(SmartFoldingCommand):
     """
     f = None
     def run(self, edit):
-        # print(self.is_global_folded())
-        if (self.is_global_folded() is True or self.f is 1):
-            self.unfold_all()
-            self.f = None
-        elif self.f is 2:
-            self.fold_all()
-            self.f = 1
-        elif self.f is 3:
-            self.fold_2()
-            self.f = 2
-        elif self.f is None:
-            self.fold_3()
-            self.f = 3
-        # print(self.f)
+        setting = sublime.load_settings("SmartMarkdown.sublime-settings")
+        folding_style = int(setting.get('global_folding'))
+        # print(folding_style)
+        if folding_style is 0:
+            # print(self.is_global_folded())
+            if (self.is_global_folded() is True or self.f is 1):
+                self.unfold_all()
+                self.f = None
+            elif self.f is 2:
+                self.fold_all()
+                self.f = 1
+            elif self.f is 3:
+                self.fold_2()
+                self.f = 2
+            elif self.f is None:
+                self.fold_3()
+                self.f = 3
+            # print(self.f)
+        elif folding_style is 1:
+            if self.is_global_folded():
+                self.unfold_all()
+            else:
+                self.fold_all()
+        elif folding_style is 2:
+            if self.f is 2:
+                self.unfold_all()
+                self.f = None
+            else:
+                self.fold_2()
+                self.f = 2
+        elif folding_style is 3:
+            if self.f is 3:
+                self.unfold_all()
+                self.f = None
+            else:
+                self.fold_3()
+                self.f = 3
 
     def is_global_folded(self):
         """Check if all headlines are folded.
