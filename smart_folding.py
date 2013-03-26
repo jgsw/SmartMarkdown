@@ -108,12 +108,22 @@ class GlobalFoldingCommand(SmartFoldingCommand):
     Otherwise fold.
 
     """
+    f = None
     def run(self, edit):
-        if self.is_global_folded():
-            # Unfold all
+        # print(self.is_global_folded())
+        if (self.is_global_folded() is True or self.f is 1):
             self.unfold_all()
-        else:
+            self.f = None
+        elif self.f is 2:
             self.fold_all()
+            self.f = 1
+        elif self.f is 3:
+            self.fold_2()
+            self.f = 2
+        elif self.f is None:
+            self.fold_3()
+            self.f = 3
+        # print(self.f)
 
     def is_global_folded(self):
         """Check if all headlines are folded.
@@ -170,6 +180,55 @@ class GlobalFoldingCommand(SmartFoldingCommand):
             if not is_region_void(region):
                 point = region.a
         self.adjust_cursors_and_view()
+
+    def fold_3(self):
+        region, level = headline.find_headline(self.view, \
+                                               0, \
+                                               True, \
+                                               headline.ANY_LEVEL, \
+                                               True)
+        # At this point, headline region is sure to exist, otherwise it would be
+        # treated as gobal folded. (self.is_global_folded() would return True)
+        point = region.a
+        # point can be zero
+        while (point is not None and region):
+            region = headline.region_of_content_of_headline_at_point(self.view, \
+                                                                     point)
+            if not is_region_void(region) and level is 3:
+                point = region.b
+                self.view.fold(sublime.Region(region.a - 1, region.b))
+            region, level = headline.find_headline(self.view, point, 3, \
+                                                   headline.ANY_LEVEL, \
+                                                   True, \
+                                                   skip_headline_at_point=True)
+            if not is_region_void(region):
+                point = region.a
+            self.adjust_cursors_and_view()
+
+    def fold_2(self):
+        region, level = headline.find_headline(self.view, \
+                                               0, \
+                                               2, \
+                                               True, \
+                                               headline.MATCH_SILBING, \
+                                               True)
+        # At this point, headline region is sure to exist, otherwise it would be
+        # treated as gobal folded. (self.is_global_folded() would return True)
+        point = region.a
+        # point can be zero
+        while (point is not None and region):
+            region = headline.region_of_content_of_headline_at_point(self.view, \
+                                                                     point)
+            if not is_region_void(region) and level is 2:
+                point = region.b
+                self.view.fold(sublime.Region(region.a - 1, region.b))
+            region, level = headline.find_headline(self.view, point, 2, \
+                                                   headline.MATCH_SILBING, \
+                                                   True, \
+                                                   skip_headline_at_point=True)
+            if not is_region_void(region):
+                point = region.a
+            self.adjust_cursors_and_view()
 
     def adjust_cursors_and_view(self):
         """After folder, adjust cursors and view.
