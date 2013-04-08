@@ -60,7 +60,8 @@ class SmartListCommand(sublime_plugin.TextCommand):
                 self.view.insert(edit, region.a, "\n" + insert_text)
                 break
 
-            self.view.insert(edit, region.a, '\n')
+            self.view.insert(edit, region.a, '\n' + \
+                             re.sub(r'\S+\s*', '', before_point_content))
         self.adjust_view()
 
     def adjust_view(self):
