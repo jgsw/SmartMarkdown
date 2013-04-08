@@ -7,9 +7,10 @@ import sublime
 import sublime_plugin
 
 
-ORDER_LIST_PATTERN = re.compile(r"(\s*)(\d+)(\.\s+)\S+")
+ORDER_LIST_PATTERN = re.compile(r"(\s*[(]?)(\d+)([.)]\s+)\S+")
 UNORDER_LIST_PATTERN = re.compile(r"(\s*[-+\**]+)(\s+)\S+")
-EMPTY_LIST_PATTERN = re.compile(r"(\s*([-+\**]|\d+\.+))\s+$")
+EMPTY_LIST_PATTERN = re.compile(r"(\s*)([-+\**]|[(]?\d+[.)])(\s+)$")
+NONLIST_PATTERN = re.compile(r"(\s*[>|%]+)(\s+)\S?")
 
 
 class SmartListCommand(sublime_plugin.TextCommand):
@@ -32,7 +33,11 @@ class SmartListCommand(sublime_plugin.TextCommand):
 
             match = EMPTY_LIST_PATTERN.match(before_point_content)
             if match:
+                insert_text = match.group(1) + \
+                              re.sub(r'\S', ' ', str(match.group(2))) + \
+                              match.group(3)
                 self.view.erase(edit, before_point_region)
+                self.view.insert(edit, line_region.a, insert_text)
                 break
 
             match = ORDER_LIST_PATTERN.match(before_point_content)
@@ -44,6 +49,12 @@ class SmartListCommand(sublime_plugin.TextCommand):
                 break
 
             match = UNORDER_LIST_PATTERN.match(before_point_content)
+            if match:
+                insert_text = match.group(1) + match.group(2)
+                self.view.insert(edit, region.a, "\n" + insert_text)
+                break
+
+            match = NONLIST_PATTERN.match(before_point_content)
             if match:
                 insert_text = match.group(1) + match.group(2)
                 self.view.insert(edit, region.a, "\n" + insert_text)
